@@ -1,3 +1,5 @@
+import asyncio
+from app.consumer import consume
 from fastapi import FastAPI
 from app.database import Base, engine
 from app.routes import payments
@@ -21,3 +23,7 @@ app.include_router(payments.router, tags=['Payments'], prefix="/api/payments")
 @app.get("/api/healthchecker")
 def root():
     return {"message": "Welcome to FastAPI with MongoDB Payments"}
+
+@app.on_event("startup")
+async def startup_event():
+    asyncio.create_task(consume())
