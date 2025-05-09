@@ -1,0 +1,36 @@
+name: Docker CI
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Debug working directory contents
+      run: ls -la
+
+    - name: Log in to Docker Hub
+      run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build frontend image
+      run: |
+        docker build -f Dockerfile.frontend -t palani1703/payment-frontend:latest .
+
+
+    - name: Build backend image
+      run: |
+        docker build -f Dockerfile.backend -t palani1703/payment-backend:latest .
+
+    - name: Push frontend image
+      run: docker push palani1703/payment-frontend:latest
+
+    - name: Push backend image
+      run: docker push palani1703/payment-backend:latest
