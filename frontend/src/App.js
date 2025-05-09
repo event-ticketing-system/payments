@@ -27,6 +27,7 @@ function App() {
       .then(() => {
         setPayments(payments.filter(p => p.order_id !== orderId));
         alert("Payment confirmed!");
+        window.location.href = "http://localhost:3001/";
       })
       .catch(err => {
         console.error(err);
