@@ -1,0 +1,15 @@
+# Use a base image with Node.js and Python
+FROM node:16-alpine AS frontend
+
+# Set working directory for front-end
+WORKDIR /app
+
+# Copy frontend files and install dependencies
+COPY ./frontend/package*.json /app/
+RUN npm install
+COPY ./frontend/ /app/
+
+# Build the front-end for production (optional)
+RUN npm run build
+
+CMD ["npm", "start"]
