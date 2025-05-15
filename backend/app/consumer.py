@@ -16,19 +16,32 @@ async def handle_order_created(message: aio_pika.IncomingMessage):
 
         db = SessionLocal()
         try:
-            payment = models.Payment(
-                order_id=data["order_id"],
-                event_id=data["event_id"],
-                event_name=data["event_name"],
-                quantity=data["quantity"],
-                total_price=data["total_price"],
-                payment_status="pending",
-                payment_time=datetime.datetime.utcnow()
-            )
-            db.add(payment)
-            db.commit()
+            existing_payment = db.query(models.Payment).filter_by(merchant_transaction_id=data["merchant_transaction_id"]).first()
+            if existing_payment:
+                existing_payment.event_id = data["event_id"]
+                existing_payment.event_name = data["event_name"]
+                existing_payment.quantity = data["quantity"]
+                existing_payment.total_price = data["total_price"]
+                existing_payment.user_id = data["user_id"]
+                existing_payment.payment_status = "pending"
+                db.commit()
+                print(f"Payment record updated for order {data['order_id']}")
+            else:
+                new_payment = models.Payment(
+                    order_id=data["order_id"],
+                    event_id=data["event_id"],
+                    event_name=data["event_name"],
+                    quantity=data["quantity"],
+                    total_price=data["total_price"],
+                    payment_status="pending",
+                    merchant_transaction_id=data["merchant_transaction_id"],
+                    user_id=data["user_id"] 
+                )
+                db.add(new_payment)
+                db.commit()
+                print(f"New payment record created for order {data['order_id']}")
         except Exception as e:
-            print("Payment failed:", e)
+            print(f"Payment handling failed: {e}")
             db.rollback()
         finally:
             db.close()
@@ -48,4 +61,4 @@ async def consume():
     await queue.bind(exchange, routing_key="order_created")
     await queue.consume(handle_order_created)
 
-    print(" [*] Waiting for order_created messages.")
+    print(" [*] Listening for order_created messages.")
